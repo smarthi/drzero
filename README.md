@@ -207,12 +207,129 @@ python demo.py "What is transformer attention?"
 pytest test_agent.py -v
 ```
 
+## 🧠 Real Training Loop (LLM Fine-tuning)
+
+The system includes a complete training pipeline that uses accumulated feedback to actually improve the LLM:
+
+### How It Works
+
+1. **HRPO Data Preparation**: Feedback is grouped by query complexity (hop count)
+2. **Relative Rewards**: Each response's rating is compared to its group's baseline
+3. **Training Selection**: Responses above baseline become positive examples
+4. **LoRA Fine-tuning**: Efficient adapter training without modifying base weights
+
+### Training Commands
+
+```bash
+# Check if dependencies are installed
+python training_loop.py --mode check
+
+# Run demo with synthetic data (no GPU needed)
+python evolution.py demo
+
+# Check evolution readiness (needs Restate running)
+python evolution.py check
+
+# Trigger SFT training when ready
+python evolution.py train
+
+# Trigger DPO training (preference learning)
+python evolution.py train-dpo
+```
+
+### Install Training Dependencies
+
+```bash
+pip install torch transformers peft trl datasets accelerate
+```
+
+### Training Architecture
+
+```
+Feedback Store                 Training Pipeline
+     │                              │
+     ▼                              ▼
+┌─────────────┐              ┌─────────────────┐
+│ User Ratings │─────────────▶│ HRPO Grouping   │
+│ (1-5 stars)  │              │ (by hop count)  │
+└─────────────┘              └────────┬────────┘
+                                      │
+                                      ▼
+                             ┌─────────────────┐
+                             │ Compute Baseline │
+                             │ (per group)      │
+                             └────────┬────────┘
+                                      │
+                    ┌─────────────────┼─────────────────┐
+                    ▼                 ▼                 ▼
+             ┌──────────┐      ┌──────────┐      ┌──────────┐
+             │ Positive  │      │ Neutral  │      │ Negative │
+             │ (rating > │      │          │      │ (rating <│
+             │ baseline) │      │          │      │ baseline)│
+             └─────┬────┘      └──────────┘      └────┬─────┘
+                   │                                   │
+                   ▼                                   ▼
+             ┌──────────┐                       ┌──────────┐
+             │ SFT Data │                       │ DPO Pairs │
+             │ (learn   │◀──────────────────────│ (contrast │
+             │  good)   │                       │  good/bad)│
+             └─────┬────┘                       └─────┬────┘
+                   │                                   │
+                   ▼                                   ▼
+             ┌──────────────────────────────────────────────┐
+             │              LoRA Fine-tuning               │
+             │   (Parameter-efficient adapter training)    │
+             └──────────────────────────────────────────────┘
+                                      │
+                                      ▼
+                             ┌─────────────────┐
+                             │ Improved Model  │
+                             │ (better answers)│
+                             └─────────────────┘
+```
+
+### Key Concepts from Dr. Zero
+
+| Concept | Implementation |
+|---------|---------------|
+| **HRPO Grouping** | Queries grouped by hop count (1, 2, 3+) |
+| **Group Baseline** | Mean rating per hop group |
+| **Relative Reward** | `rating - baseline` |
+| **Positive Examples** | `relative_reward > 0.3` (for SFT) |
+| **Preference Pairs** | Positive vs negative examples (for DPO) |
+
+### Training Configuration
+
+Edit `training_loop.py` to customize:
+
+```python
+@dataclass
+class TrainingConfig:
+    # Model
+    base_model: str = "Qwen/Qwen2.5-1.5B-Instruct"
+    
+    # LoRA settings
+    lora_r: int = 16
+    lora_alpha: int = 32
+    
+    # Training
+    learning_rate: float = 2e-4
+    batch_size: int = 4
+    num_epochs: int = 3
+    
+    # HRPO thresholds
+    positive_reward_threshold: float = 0.3
+    negative_reward_threshold: float = -0.3
+```
+
 ## 📚 References
 
 - [Dr. Zero Paper](https://arxiv.org/abs/2601.07055) - Meta's self-evolving search agents
 - [Restate Documentation](https://docs.restate.dev/) - Durable execution framework
 - [ColBERT](https://arxiv.org/abs/2004.12832) - Late interaction retrieval
 - [HRPO](https://arxiv.org/abs/2601.07055) - Hop-grouped relative policy optimization
+- [LoRA](https://arxiv.org/abs/2106.09685) - Low-Rank Adaptation
+- [DPO](https://arxiv.org/abs/2305.18290) - Direct Preference Optimization
 
 ## 📜 License
 
