@@ -88,28 +88,44 @@ class QueryExpander:
     def _estimate_hop_count(self, query: str) -> int:
         """
         Estimate query complexity (hop count) for HRPO grouping.
-        
-        1-hop: Simple factual queries
-        2-hop: Queries requiring synthesis or comparison
-        3+-hop: Complex multi-step reasoning
+
+        1-hop: Simple factual queries ("What is X?", "Define Y")
+        2-hop: Queries requiring synthesis, comparison, or explanation
+        3+-hop: Complex multi-step reasoning with multiple aspects
+
+        Based on Dr. Zero paper's HRPO (Hop-Grouped Relative Policy Optimization).
         """
-        query_lower = query.lower()
-        
-        # Count complexity indicators
+        query_lower = query.lower().strip()
+
+        # Count complexity indicators (weighted)
         indicator_count = sum(
             1 for indicator in self.MULTI_HOP_INDICATORS
             if indicator in query_lower
         )
-        
-        # Count question marks (multiple questions = more complex)
+
+        # Multiple questions indicate multi-hop (but single ? doesn't add complexity)
         question_count = query.count("?")
-        
-        # Count "and" conjunctions
+        extra_questions = max(0, question_count - 1)  # Only count additional questions
+
+        # Count "and" conjunctions joining distinct concepts
         and_count = query_lower.count(" and ")
-        
-        # Estimate hop count
-        complexity_score = indicator_count + question_count + and_count
-        
+
+        # Check for simple definitional patterns (these are always 1-hop)
+        simple_patterns = [
+            query_lower.startswith("what is "),
+            query_lower.startswith("what are "),
+            query_lower.startswith("define "),
+            query_lower.startswith("who is "),
+            query_lower.startswith("who was "),
+        ]
+
+        # If it's a simple definitional query with no complexity indicators, it's 1-hop
+        if any(simple_patterns) and indicator_count == 0 and and_count == 0:
+            return 1
+
+        # Calculate complexity score
+        complexity_score = indicator_count + extra_questions + and_count
+
         if complexity_score == 0:
             return 1  # Simple query
         elif complexity_score <= 2:

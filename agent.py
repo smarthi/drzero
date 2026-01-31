@@ -7,10 +7,9 @@ Complete demo implementation with mock services for local testing.
 
 import restate
 from restate import VirtualObject, Workflow, Service, ObjectContext, ObjectSharedContext, WorkflowContext, Context
-from dataclasses import dataclass, field, asdict
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Optional, Any
 from datetime import datetime
-import json
 import hashlib
 import time
 import os
@@ -21,50 +20,49 @@ from query_expander import QueryExpander
 
 
 # =============================================================================
-# Data Models
+# Data Models (Pydantic)
 # =============================================================================
 
-@dataclass
-class SearchQuery:
+class SearchQuery(BaseModel):
     query_id: str
     original_query: str
     user_id: str
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
-@dataclass
-class ExpandedQueries:
+
+class ExpandedQueries(BaseModel):
     original: str
     expansions: list[str]
     sub_queries: list[str]
     hop_count: int
 
-@dataclass
-class RetrievedChunk:
+
+class RetrievedChunk(BaseModel):
     chunk_id: str
     content: str
     source: str
     score: float
-    metadata: dict = field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
-@dataclass
-class SearchResult:
+
+class SearchResult(BaseModel):
     query_id: str
     original_query: str
-    expanded_queries: dict
-    retrieved_chunks: list[dict]
+    expanded_queries: dict[str, Any]
+    retrieved_chunks: list[dict[str, Any]]
     generated_response: str
     model_used: str
     retrieval_latency_ms: float
     generation_latency_ms: float
 
-@dataclass
-class UserFeedback:
+
+class UserFeedback(BaseModel):
     query_id: str
     rating: int
     selected_chunks: list[str]
     feedback_text: Optional[str] = None
     user_id: str = "anonymous"
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
 
 # =============================================================================
@@ -89,7 +87,7 @@ _result_store: dict[str, dict] = {}
 
 
 def store_result(result: SearchResult) -> dict:
-    _result_store[result.query_id] = asdict(result)
+    _result_store[result.query_id] = result.model_dump()
     return {"stored": True, "query_id": result.query_id}
 
 
@@ -107,10 +105,10 @@ feedback_store = VirtualObject("feedback-store")
 async def record_feedback(ctx: ObjectContext, feedback_data: dict) -> dict:
     """Record user feedback and update learning signals."""
     feedback = UserFeedback(**feedback_data)
-    
+
     # Get existing feedback history
     history = await ctx.get("feedback_history") or []
-    history.append(asdict(feedback))
+    history.append(feedback.model_dump())
     
     # Keep last 1000 entries
     if len(history) > 1000:
@@ -351,7 +349,7 @@ async def submit_feedback(ctx: Context, feedback_data: dict) -> dict:
     # is non-deterministic, so resolve it via ctx.run to journal the result
     feedback_dict = await ctx.run(
         "build_feedback",
-        lambda: asdict(UserFeedback(**feedback_data))
+        lambda: UserFeedback(**feedback_data).model_dump()
     )
 
     # Record in user's feedback store — use object_call (not object_send)
