@@ -2,7 +2,21 @@
   "permissions": {
     "allow": [
       "Bash(python3:*)",
-      "Bash(pip3 list:*)"
+      "Bash(pip3 list:*)",
+      "Bash(docker ps:*)",
+      "Bash(curl:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker compose down:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker logs:*)",
+      "Bash(__NEW_LINE_19fb3e340262ca32__ echo -e \"\\\\n=== Checking ui-test-user preferences ===\")",
+      "Bash(# Re-register the deployment to pick up the new code curl -s -X POST http://localhost:9070/deployments \\\\ -H ''content-type: application/json'' \\\\ -d ''{\"\"uri\"\": \"\"http://host.docker.internal:9080\"\", \"\"force\"\": true}'' || \\\\ curl -s -X POST http://localhost:9070/deployments \\\\ -H ''content-type: application/json'' \\\\ -d ''{\"\"uri\"\": \"\"http://dr-zero-agent:9080\"\", \"\"force\"\": true}'' sleep 2 # Test the full flow echo -e \"\"\\\\n=== Testing feedback submission ===\"\" curl -s \"\"http://localhost:8080/search-agent/test-feedback-123/submit_feedback\"\" \\\\ -H ''content-type: application/json'' \\\\ --data-raw ''{\"\"query_id\"\":\"\"test-feedback-123\"\",\"\"rating\"\":4,\"\"selected_chunks\"\":[],\"\"user_id\"\":\"\"demo-user\"\"}'')",
+      "Bash(__NEW_LINE_b62cd171e8dd3f77__ echo -e \"\\\\n=== Checking learning signals ===\")",
+      "Bash(__NEW_LINE_4f1c7f5f1afc159f__ echo -e \"\\\\n=== Testing feedback submission ===\")",
+      "Bash(__NEW_LINE_ac6119f176d3bf99__ echo -e \"\\\\n=== Checking learning signals ===\")",
+      "Bash(# Re-register and test curl -s -X POST http://localhost:9070/deployments \\\\ -H ''content-type: application/json'' \\\\ -d ''{\"\"uri\"\": \"\"http://host.docker.internal:9080\"\", \"\"force\"\": true}'' || \\\\ curl -s -X POST http://localhost:9070/deployments \\\\ -H ''content-type: application/json'' \\\\ -d ''{\"\"uri\"\": \"\"http://dr-zero-agent:9080\"\", \"\"force\"\": true}'' sleep 2 echo \"\"=== Testing simple query \\(should be Hop-1\\) ===\"\" curl -s \"\"http://localhost:8080/search-agent/hop-test-1/run_search\"\" \\\\ -H ''content-type: application/json'' \\\\ --data-raw ''{\"\"query_id\"\":\"\"hop-test-1\"\",\"\"original_query\"\":\"\"What is RAG?\"\",\"\"user_id\"\":\"\"test\"\"}'' \\\\)",
+      "Bash(__NEW_LINE_875ad6b5dd26e8bf__ echo -e \"\\\\n=== Testing moderate query \\(should be Hop-2\\) ===\")",
+      "Bash(__NEW_LINE_ecce9d0ea0cf1aac__ echo -e \"\\\\n=== Testing complex query \\(should be Hop-3\\) ===\")"
     ]
   }
 }

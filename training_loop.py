@@ -15,15 +15,12 @@ The key insight from Dr. Zero:
 - Fine-tune on positive examples (SFT) or use preference pairs (DPO)
 """
 
-import os
 import json
 import torch
 from dataclasses import dataclass, field, asdict
-from typing import Optional, List, Dict, Tuple
+from typing import List, Dict
 from datetime import datetime
 from pathlib import Path
-import hashlib
-
 
 # =============================================================================
 # Configuration
@@ -409,7 +406,6 @@ class LoRATrainer:
             logging_steps=10,
             save_steps=100,
             eval_steps=100,
-            evaluation_strategy="steps",
             save_total_limit=3,
             fp16=True,
             report_to=[],  # Disable wandb etc.
@@ -448,9 +444,6 @@ class LoRATrainer:
             from trl import DPOTrainer, DPOConfig
         except ImportError:
             raise ImportError("Please install trl: pip install trl")
-        
-        from transformers import TrainingArguments
-        from torch.utils.data import Dataset
         
         # Convert to DPO format
         dpo_data = []
