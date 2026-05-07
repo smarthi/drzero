@@ -18,7 +18,7 @@ docker-compose up --build
 
 That's it! The UI will be available at http://localhost:8501
 
-## 🎮 What You Can Demo
+## 🎮 What this covers
 
 ### 1. Search & Feedback Loop
 - Enter queries in the web UI
