@@ -2,7 +2,7 @@
 
 A self-evolving RAG (Retrieval-Augmented Generation) system with human-in-the-loop feedback, inspired by [Meta's Dr. Zero paper](https://arxiv.org/abs/2601.07055) and built on [Restate](https://restate.dev/) for durable execution.
 
-**New in v2:** Lyapunov-stable iterative retrieval with formal convergence guarantees — critical for clinical and high-stakes applications.
+**New in v2:** Lyapunov-stable iterative retrieval with formal convergence guarantees — critical for enterprise and high-stakes applications.
 
 ![Demo](https://img.shields.io/badge/demo-ready-brightgreen) ![Restate](https://img.shields.io/badge/Restate-0.4+-blue) ![Python](https://img.shields.io/badge/Python-3.11+-yellow) ![Lyapunov](https://img.shields.io/badge/Lyapunov-stable-purple)
 
@@ -18,7 +18,7 @@ docker-compose up --build
 
 That's it! The UI will be available at http://localhost:8501
 
-## 🎮 What this covers
+## 🎮 What You Can Demo
 
 ### 1. Search & Feedback Loop
 - Enter queries in the web UI
@@ -39,7 +39,7 @@ That's it! The UI will be available at http://localhost:8501
 ### 4. Lyapunov-Stable Retrieval (NEW)
 - Formal convergence guarantees for iterative retrieval
 - Explainable stopping criteria ("stopped because ΔV < ε")
-- Clinical-grade audit trails
+- Enterprise-grade audit trails
 - Stability classification (converging, stable, oscillating, unstable)
 
 ## 📊 Architecture
@@ -162,7 +162,7 @@ Each group has its own baseline, and **relative reward** = user_rating - group_b
 
 ## 🔬 Lyapunov-Stable Iterative Retrieval
 
-For clinical and high-stakes applications requiring **formal convergence guarantees**, the system includes a Lyapunov stability framework that frames multi-hop retrieval as a discrete dynamical system.
+For enterprise and high-stakes applications requiring **formal convergence guarantees**, the system includes a Lyapunov stability framework that frames multi-hop retrieval as a discrete dynamical system.
 
 ### Mathematical Framework
 
@@ -182,7 +182,7 @@ Stopping:    |ΔV| < ε  or  t > T_max   # principled termination
 | **Stopping Criterion** | Stop when ΔV < ε | Explainable "why we stopped here" |
 | **Confidence Bound** | 1 - V(x_final) | Quantified retrieval quality |
 | **Architecture Comparison** | Lyapunov exponent λ | Compare retrieval policies objectively |
-| **Audit Trail** | Full state history {x₀, x₁, ...} | Clinical compliance & explainability |
+| **Audit Trail** | Full state history {x₀, x₁, ...} | Compliance & explainability |
 
 ### Lyapunov Functions
 
@@ -195,7 +195,7 @@ V_relevance(x) = 1 - weighted_avg(document_scores)
 # 2. Coverage-based (tracks query facet coverage)
 V_coverage(x) = 1 - cosine(query_embedding, doc_set_centroid)
 
-# 3. Hybrid (recommended for clinical use)
+# 3. Hybrid (recommended for production)
 V_hybrid(x) = α · V_relevance + (1-α) · V_coverage
 
 # 4. Oracle (for training/evaluation with ground truth)
@@ -205,20 +205,20 @@ V_oracle(x) = 1 - Jaccard(retrieved_docs, ground_truth_docs)
 ### Usage
 
 ```python
-from lyapunov_integration import ClinicalRetriever, ClinicalRetrievalConfig
+from lyapunov_integration import EnterpriseRetriever, EnterpriseRetrievalConfig
 
-# Configure for clinical use
-config = ClinicalRetrievalConfig(
+# Configure for production use
+config = EnterpriseRetrievalConfig(
     min_confidence=0.7,        # Require 70% confidence to accept results
     require_convergence=True,  # Must converge (no early termination)
-    max_clinical_iterations=3, # Latency bound for real-time use
+    max_iterations=3,          # Latency bound for real-time use
 )
 
 # Initialize retriever
-retriever = ClinicalRetriever(rag_pipeline, query_expander, config)
+retriever = EnterpriseRetriever(rag_pipeline, query_expander, config)
 
 # Run search with stability guarantees
-result = retriever.search("Treatment guidelines for acute myocardial infarction")
+result = retriever.search("What are the best practices for distributed system architecture?")
 
 # Inspect convergence
 print(f"Converged: {result['converged']}")
@@ -250,7 +250,7 @@ The system classifies retrieval trajectories by their Lyapunov behavior:
 # Run Lyapunov retrieval demo
 python lyapunov_retrieval.py demo
 
-# Run clinical integration demo  
+# Run enterprise integration demo  
 python lyapunov_integration.py demo
 ```
 
@@ -260,7 +260,7 @@ Output:
 LYAPUNOV-STABLE ITERATIVE RETRIEVAL DEMO
 ======================================================================
 
-Query: What are the clinical guidelines for treating acute MI?
+Query: What are the best practices for building scalable distributed systems?
 ----------------------------------------------------------------------
 
 [Convergence Metrics]
@@ -287,7 +287,7 @@ dr_zero_agent/
 ├── demo.py                # CLI demo script
 │
 ├── lyapunov_retrieval.py  # 🆕 Lyapunov stability framework
-├── lyapunov_integration.py# 🆕 Clinical retriever + training integration
+├── lyapunov_integration.py# 🆕 Enterprise retriever + training integration
 ├── training_loop.py       # LoRA fine-tuning (SFT/DPO)
 ├── evolution.py           # Training orchestration
 │
@@ -322,15 +322,15 @@ config = LyapunovConfig(
 )
 ```
 
-### Clinical Retrieval Configuration
+### Enterprise Retrieval Configuration
 
 ```python
-from lyapunov_integration import ClinicalRetrievalConfig
+from lyapunov_integration import EnterpriseRetrievalConfig
 
-config = ClinicalRetrievalConfig(
+config = EnterpriseRetrievalConfig(
     min_confidence=0.7,        # Minimum 1 - V for acceptance
     require_convergence=True,  # Must converge to return results
-    max_clinical_iterations=3, # Lower for latency-sensitive clinical use
+    max_iterations=3,          # Lower for latency-sensitive use
     full_audit_trail=True,     # Keep full state history
     include_reasoning=True,    # Explain why retrieval stopped
 )
@@ -380,7 +380,7 @@ python demo.py "What is transformer attention?"
 # Lyapunov stability demo
 python lyapunov_retrieval.py demo
 
-# Clinical retrieval demo
+# Enterprise retrieval demo
 python lyapunov_integration.py demo
 
 # Training demo (synthetic data)
@@ -545,4 +545,4 @@ MIT
 
 Built with ❤️ using [Restate](https://restate.dev) and inspired by [Dr. Zero](https://arxiv.org/abs/2601.07055)
 
-**Key Innovation:** Formal convergence guarantees via Lyapunov stability theory, enabling production-safe iterative retrieval for clinical and high-stakes applications.
+**Key Innovation:** Formal convergence guarantees via Lyapunov stability theory, enabling production-safe iterative retrieval for enterprise and high-stakes applications.
